@@ -312,3 +312,4 @@ After the production deployment completes:
 - Confirm that the application is working correctly.
 - Verify that production is running the same image SHA that was tested in staging.
 Week 08 CI/CD pipeline run
+Week 08 CI/CD pipeline test run
