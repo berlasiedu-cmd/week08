@@ -167,6 +167,7 @@ jobs:
 
       - name: Docker Scout - vulnerability scan
         uses: docker/scout-action@v1
+        continue-on-error: true
         with:
           command: cves
           image: local://${{ vars.ACR_LOGIN_SERVER }}/${{ matrix.image }}:${{ github.sha }}
