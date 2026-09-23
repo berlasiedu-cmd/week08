@@ -149,3 +149,37 @@ jobs:
           kubectl get pods -n production
           kubectl get services -n production
           kubectl get pvc -n production
+
+  validate-monitoring:
+    name: Validate Prometheus & Grafana
+    runs-on: ubuntu-latest
+    needs: deploy-production
+
+    steps:
+      - name: Login to Azure
+        uses: azure/login@v3
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Get AKS credentials
+        run: |
+          az aks get-credentials \
+            --resource-group ${{ vars.AKS_RESOURCE_GROUP }} \
+            --name ${{ vars.AKS_CLUSTER_NAME }} \
+            --overwrite-existing
+
+      - name: Wait for Grafana to be ready
+        run: |
+          kubectl wait --for=condition=Ready pod \
+            -l app.kubernetes.io/name=grafana \
+            -n monitoring \
+            --timeout=120s
+
+      - name: Confirm monitoring stack pods are running
+        run: |
+          kubectl get pods -n monitoring -l release=prometheus -o wide
+
+      - name: Show monitoring stack status
+        run: |
+          kubectl get pods -n monitoring
+          kubectl get svc -n monitoring

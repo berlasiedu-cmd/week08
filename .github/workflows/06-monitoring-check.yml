@@ -1,13 +1,6 @@
-name: 06 - Validate Monitoring
+name: 06 - Validate Monitoring (Manual)
 
 on:
-  workflow_run:
-    workflows:
-      - "04 - Deploy to Production"
-    types:
-      - completed
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
@@ -15,12 +8,9 @@ jobs:
     name: Validate Prometheus & Grafana
     runs-on: ubuntu-latest
 
-    if: >
-      ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
-
     steps:
       - name: Login to Azure
-        uses: azure/login@v2
+        uses: azure/login@v3
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
