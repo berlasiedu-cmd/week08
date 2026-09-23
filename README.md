@@ -302,6 +302,8 @@ Run the production workflow and verify that it completes successfully.
 
 Important: Production must use the same image version that was tested in staging. Do not rebuild the Docker images for production.
 
+### Verify production
+
 14. Verify the Production Application
 
 After the production deployment completes:
