@@ -1,0 +1,47 @@
+name: 06 - Validate Monitoring
+
+on:
+  workflow_run:
+    workflows:
+      - "04 - Deploy to Production"
+    types:
+      - completed
+    branches:
+      - main
+
+jobs:
+  check-monitoring:
+    name: Validate Prometheus & Grafana
+    runs-on: ubuntu-latest
+
+    if: >
+      ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Get AKS credentials
+        run: |
+          az aks get-credentials \
+            --resource-group ${{ vars.AKS_RESOURCE_GROUP }} \
+            --name ${{ vars.AKS_CLUSTER_NAME }} \
+            --overwrite-existing
+
+      - name: Wait for Grafana to be ready
+        run: |
+          kubectl wait --for=condition=Ready pod \
+            -l app.kubernetes.io/name=grafana \
+            -n monitoring \
+            --timeout=120s
+
+      - name: Confirm monitoring stack pods are running
+        run: |
+          kubectl get pods -n monitoring -l release=prometheus -o wide
+
+      - name: Show monitoring stack status
+        run: |
+          kubectl get pods -n monitoring
+          kubectl get svc -n monitoring
