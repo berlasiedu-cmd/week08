@@ -170,6 +170,8 @@ jobs:
         with:
           command: cves
           image: local://${{ vars.ACR_LOGIN_SERVER }}/${{ matrix.image }}:${{ github.sha }}
+          dockerhub-user: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub-password: ${{ secrets.DOCKERHUB_TOKEN }}
           only-severities: critical,high
           exit-code: false
           summary: true
