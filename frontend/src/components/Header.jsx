@@ -33,6 +33,7 @@ const Header = () => {
         ml: `${drawerWidth}px`,
         zIndex: (theme) =>
           theme.zIndex.drawer + 1,
+        backgroundColor: "#0B6E4F",
       }}
     >
       <Toolbar>
@@ -43,7 +44,7 @@ const Header = () => {
             fontWeight: 600,
           }}
         >
-          KoalaTech University
+          KoalaTech University — Live in Production 🚀
         </Typography>
 
         <Box
