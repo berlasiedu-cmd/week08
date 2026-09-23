@@ -10,7 +10,7 @@ The same Docker images that are tested in staging are deployed to production. Th
 
 ---
 
-## 1. Continuous Delivery Workflow
+## 1. Continuous Delivery Workflow 
 
 The Week 08 pipeline consists of four GitHub Actions workflows:
 
@@ -272,6 +272,7 @@ Once the deployment is complete, verify the Kubernetes resources in the staging 
 
 Confirm that the application is working correctly before proceeding to production.
 
+### Deploy production
 13. Deploy to Production
 
 Production deployment is performed manually.
