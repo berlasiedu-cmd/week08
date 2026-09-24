@@ -3,7 +3,7 @@ import os
 import time
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
@@ -135,6 +135,15 @@ def root() -> dict[str, str]:
     tags=["Health"],
 )
 def health_check() -> dict[str, str]:
+    # FAIL_HEALTH_CHECK is used only to deliberately simulate a broken
+    # deployment for Task 10.3HD's automated error-rate-triggered
+    # rollback demo. It defaults to "false" for every normal deploy.
+    if os.getenv("FAIL_HEALTH_CHECK", "false").lower() == "true":
+        raise HTTPException(
+            status_code=500,
+            detail="Simulated failure for automated rollback demo.",
+        )
+
     return {
         "status": "healthy",
         "service": "user-service",
