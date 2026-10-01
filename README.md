@@ -10,7 +10,7 @@ The same Docker images that are tested in staging are deployed to production. Th
 
 ---
 
-## 1. Continuous Delivery Workflow 
+## 1. Continuous Delivery Workflow - Test
 
 The Week 08 pipeline consists of four GitHub Actions workflows:
 
