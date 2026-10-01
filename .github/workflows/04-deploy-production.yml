@@ -217,6 +217,19 @@ jobs:
           kubectl rollout undo deployment/user-service -n production
           kubectl rollout status deployment/user-service -n production --timeout=120s
 
+      - name: Restart port-forward after rollback
+        if: steps.probe.outcome == 'failure'
+        run: |
+          # kubectl port-forward tunnels to the specific pod it connected to
+          # at startup. The rollback just terminated that pod and replaced it,
+          # so the old tunnel is dead and needs to be re-established against
+          # the service's new, healthy pod before re-probing.
+          kill "$(cat /tmp/port-forward.pid)" 2>/dev/null || true
+          sleep 2
+          kubectl port-forward -n production svc/user-service 8000:8000 &
+          echo $! > /tmp/port-forward.pid
+          sleep 5
+
       - name: Re-probe after rollback
         id: reprobe
         if: steps.probe.outcome == 'failure'
