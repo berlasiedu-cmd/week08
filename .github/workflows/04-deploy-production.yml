@@ -67,46 +67,30 @@ jobs:
             --dry-run=client \
             -o yaml | kubectl apply -f -
 
-      - name: Apply Kubernetes manifests
+      - name: Apply Kubernetes manifests with resolved images
         run: |
-          kubectl apply \
-            -f kubernetes/production/
+          set -e
+          SHA="${{ github.event.workflow_run.head_sha }}"
+          REGISTRY="${{ vars.ACR_LOGIN_SERVER }}"
 
-      - name: Update frontend image
-        run: |
-          kubectl set image deployment/frontend \
-            frontend=${{ vars.ACR_LOGIN_SERVER }}/koalatech-frontend:${{ github.event.workflow_run.head_sha }} \
-            -n production
+          # Substitute the real image tag into each manifest BEFORE applying,
+          # instead of applying the "placeholder" image and patching it in a
+          # separate step. Applying the placeholder image and then patching it
+          # used to create two rollout revisions per deploy (one broken, one
+          # good), which made `kubectl rollout undo` unreliable for Task
+          # 10.3HD's automated rollback -- it could land on the broken
+          # placeholder revision depending on how many deploys had run.
+          rm -rf /tmp/k8s-production
+          cp -r kubernetes/production /tmp/k8s-production
 
-      - name: Update user-service image
-        run: |
-          kubectl set image deployment/user-service \
-            user-service=${{ vars.ACR_LOGIN_SERVER }}/koalatech-user-service:${{ github.event.workflow_run.head_sha }} \
-            -n production
+          sed -i "s#image: placeholder#image: ${REGISTRY}/koalatech-user-service:${SHA}#" /tmp/k8s-production/07-user-service.yaml
+          sed -i "s#image: placeholder#image: ${REGISTRY}/koalatech-student-service:${SHA}#" /tmp/k8s-production/08-student-service.yaml
+          sed -i "s#image: placeholder#image: ${REGISTRY}/koalatech-lecturer-service:${SHA}#" /tmp/k8s-production/09-lecturer-service.yaml
+          sed -i "s#image: placeholder#image: ${REGISTRY}/koalatech-course-service:${SHA}#" /tmp/k8s-production/10-course-service.yaml
+          sed -i "s#image: placeholder#image: ${REGISTRY}/koalatech-enrollment-service:${SHA}#" /tmp/k8s-production/11-enrollment-service.yaml
+          sed -i "s#image: placeholder#image: ${REGISTRY}/koalatech-frontend:${SHA}#" /tmp/k8s-production/12-frontend.yaml
 
-      - name: Update student-service image
-        run: |
-          kubectl set image deployment/student-service \
-            student-service=${{ vars.ACR_LOGIN_SERVER }}/koalatech-student-service:${{ github.event.workflow_run.head_sha }} \
-            -n production
-
-      - name: Update lecturer-service image
-        run: |
-          kubectl set image deployment/lecturer-service \
-            lecturer-service=${{ vars.ACR_LOGIN_SERVER }}/koalatech-lecturer-service:${{ github.event.workflow_run.head_sha }} \
-            -n production
-
-      - name: Update course-service image
-        run: |
-          kubectl set image deployment/course-service \
-            course-service=${{ vars.ACR_LOGIN_SERVER }}/koalatech-course-service:${{ github.event.workflow_run.head_sha }} \
-            -n production
-
-      - name: Update enrollment-service image
-        run: |
-          kubectl set image deployment/enrollment-service \
-            enrollment-service=${{ vars.ACR_LOGIN_SERVER }}/koalatech-enrollment-service:${{ github.event.workflow_run.head_sha }} \
-            -n production
+          kubectl apply -f /tmp/k8s-production/
 
       - name: Wait for frontend rollout
         run: |
